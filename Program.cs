@@ -1,0 +1,53 @@
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Mottu.Api.Data;
+using Mottu.Api.Dtos;
+using Mottu.Api.Hateoas;
+using Mottu.Api.Endpoints;
+using Swashbuckle.AspNetCore.Filters;
+using Microsoft.OpenApi.Models;
+using Oracle.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// DbContext (Oracle)
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    var cs = builder.Configuration.GetConnectionString("Oracle")
+             ?? throw new InvalidOperationException("Connection string 'Oracle' is missing.");
+    options.UseOracle(cs);
+});
+
+// Swagger + examples
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(o =>
+{
+    o.SwaggerDoc(builder.Configuration["Swagger:Version"] ?? "v1", new OpenApiInfo
+    {
+        Title = builder.Configuration["Swagger:Title"] ?? "API",
+        Version = builder.Configuration["Swagger:Version"] ?? "v1",
+        Description = "API RESTful em .NET 8 com boas práticas (paginação, HATEOAS, códigos HTTP)."
+    });
+    o.EnableAnnotations();
+});
+builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
+
+// HATEOAS helpers
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<LinkBuilder>();
+
+var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+
+// Endpoint groups
+app.MapUsuarioEndpoints();
+app.MapMotoEndpoints();
+app.MapEnderecoEndpoints();
+
+app.Run();
+
+public partial class Program { }
