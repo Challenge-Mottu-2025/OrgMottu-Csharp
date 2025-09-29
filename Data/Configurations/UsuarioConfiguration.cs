@@ -16,14 +16,13 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
         builder.Property(u => u.CdPlaca).HasColumnName("CD_PLACA").HasMaxLength(7);
         builder.Property(u => u.Nome).HasColumnName("ID_NOME").HasMaxLength(50).IsRequired();
         builder.Property(u => u.DataNascimento).HasColumnName("DT_NASCIMENTO").HasColumnType("DATE");
+        builder.Property(u => u.SenhaHash).HasColumnName("PW_HASH").HasMaxLength(120).IsRequired();
 
-        // Usuario -> Endereco (NR_CEP)
         builder.HasOne(u => u.Endereco)
                .WithMany(e => e.Usuarios)
                .HasForeignKey(u => u.NrCep)
                .HasPrincipalKey(e => e.NrCep);
 
-        // Usuario (CD_PLACA) -> Moto (CD_PLACA) (1:1 opcional)
         builder.HasOne(u => u.Moto)
                .WithOne(m => m.UsuarioByPlaca)
                .HasForeignKey<Usuario>(u => u.CdPlaca)

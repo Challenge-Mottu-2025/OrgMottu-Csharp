@@ -1,9 +1,13 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Mottu.Api.Data;
 using Mottu.Api.Dtos;
 using Mottu.Api.Hateoas;
 using Mottu.Api.Endpoints;
+using Mottu.Api.Services;
 using Swashbuckle.AspNetCore.Filters;
 using Microsoft.OpenApi.Models;
 using Oracle.EntityFrameworkCore;
@@ -17,6 +21,28 @@ builder.Services.AddDbContext<AppDbContext>(options =>
              ?? throw new InvalidOperationException("Connection string 'Oracle' is missing.");
     options.UseOracle(cs);
 });
+
+// JWT
+builder.Services.AddSingleton<JwtTokenService>();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.TokenValidationParameters = new()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Swagger + examples
 builder.Services.AddEndpointsApiExplorer();

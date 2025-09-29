@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OrganizadorMottu")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37c0902e0f16245c1646a43d6cefa8ec71f1fa1c")]
 [assembly: System.Reflection.AssemblyProductAttribute("OrganizadorMottu")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OrganizadorMottu")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
