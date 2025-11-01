@@ -11,6 +11,8 @@ using Mottu.Api.Services;
 using Swashbuckle.AspNetCore.Filters;
 using Microsoft.OpenApi.Models;
 using Oracle.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,9 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// Health Check
+builder.Services.AddHealthChecks();
+
 // Swagger + examples
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
@@ -73,6 +78,12 @@ app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 app.MapUsuarioEndpoints();
 app.MapMotoEndpoints();
 app.MapEnderecoEndpoints();
+
+// Endpoint de Health Check
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 
 app.Run();
 

@@ -6,6 +6,7 @@ API RESTful em .NET 9 (Minimal API) com boas práticas REST para os modelos de d
 
 - João Vitor Broggine Lopes - RM557129
 - João Victor Rocha Cândido - RM554727
+- Eduardo Augusto Pelegrino Einsfeldt - RM556460
 
 ## Justificativa da arquitetura
 
