@@ -6,6 +6,7 @@ using Mottu.Api.Hateoas;
 using Mottu.Api.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.ML;
 
 namespace Mottu.Api.Endpoints;
 
@@ -13,10 +14,11 @@ public static class UsuarioEndpoints
 {
     public static IEndpointRouteBuilder MapUsuarioEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/usuarios").WithTags("Usuarios");
+        // VERSÃO 1 - API principal.
+        var v1 = app.MapGroup("/api/usuarios").WithTags("Usuarios");
 
         // GET paginado
-        group.MapGet("/", async(AppDbContext db, LinkBuilder links, [FromQuery] int page = 1, [FromQuery] int pageSize = 10) =>
+        v1.MapGet("/", async (AppDbContext db, LinkBuilder links, [FromQuery] int page = 1, [FromQuery] int pageSize = 10) =>
         {
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
@@ -47,7 +49,7 @@ public static class UsuarioEndpoints
         .WithName("ListUsuarios");
 
         // GET by id
-        group.MapGet("/{cpf}", async (string cpf, AppDbContext db, LinkBuilder links) =>
+        v1.MapGet("/{cpf}", async (string cpf, AppDbContext db, LinkBuilder links) =>
         {
             var u = await db.Usuarios.AsNoTracking().FirstOrDefaultAsync(x => x.Cpf == cpf);
             if (u is null) return Results.NotFound();
@@ -63,7 +65,7 @@ public static class UsuarioEndpoints
         .Produces(StatusCodes.Status404NotFound);
 
         // POST
-        group.MapPost("/", async ([FromBody] UsuarioCreateDto dto, AppDbContext db, LinkBuilder links) =>
+        v1.MapPost("/", async ([FromBody] UsuarioCreateDto dto, AppDbContext db, LinkBuilder links) =>
         {
             if (await db.Usuarios.AnyAsync(u => u.Cpf == dto.Cpf))
                 return Results.Conflict($"Usuario {dto.Cpf} já existe.");
@@ -90,7 +92,7 @@ public static class UsuarioEndpoints
         .Produces(StatusCodes.Status400BadRequest);
 
         // PUT
-        group.MapPut("/{cpf}", async (string cpf, [FromBody] UsuarioUpdateDto dto, AppDbContext db) =>
+        v1.MapPut("/{cpf}", async (string cpf, [FromBody] UsuarioUpdateDto dto, AppDbContext db) =>
         {
             var model = await db.Usuarios.FirstOrDefaultAsync(u => u.Cpf == cpf);
             if (model is null) return Results.NotFound();
@@ -107,7 +109,7 @@ public static class UsuarioEndpoints
         .Produces(StatusCodes.Status404NotFound);
 
         // DELETE
-        group.MapDelete("/{cpf}", async (string cpf, AppDbContext db) =>
+        v1.MapDelete("/{cpf}", async (string cpf, AppDbContext db) =>
         {
             var model = await db.Usuarios.FirstOrDefaultAsync(u => u.Cpf == cpf);
             if (model is null) return Results.NotFound();
@@ -117,6 +119,53 @@ public static class UsuarioEndpoints
         })
         .Produces(StatusCodes.Status204NoContent)
         .Produces(StatusCodes.Status404NotFound);
+
+        // Versão 2 - com ML.NET
+
+        var v2 = app.MapGroup("/api/v2/usuarios").WithTags("Usuarios v2");
+
+        v2.MapPost("/prever-confiabilidade", (UsuarioReliabilityInput input) =>
+        {
+            var ml = new MLContext();
+
+            // Dados simulados para treinamento
+            var data = new List<UsuarioReliabilityInput>
+            {
+                new() { EntregasRealizadas = 100, MediaAvaliacoes = 4.9f, Infracoes = 0 },
+                new() { EntregasRealizadas = 50, MediaAvaliacoes = 4.5f, Infracoes = 1 },
+                new() { EntregasRealizadas = 10, MediaAvaliacoes = 3.5f, Infracoes = 4 },
+                new() { EntregasRealizadas = 70, MediaAvaliacoes = 4.0f, Infracoes = 2 },
+                new() { EntregasRealizadas = 150, MediaAvaliacoes = 5.0f, Infracoes = 0 }
+            };
+
+            var trainingData = ml.Data.LoadFromEnumerable(data);
+
+            var pipeline = ml.Transforms.Concatenate("Features",
+                nameof(UsuarioReliabilityInput.EntregasRealizadas),
+                nameof(UsuarioReliabilityInput.MediaAvaliacoes),
+                nameof(UsuarioReliabilityInput.Infracoes))
+                .Append(ml.Regression.Trainers.Sdca(labelColumnName: nameof(UsuarioReliabilityInput.EntregasRealizadas)));
+
+            var model = pipeline.Fit(trainingData);
+
+            var engine = ml.Model.CreatePredictionEngine<UsuarioReliabilityInput, UsuarioReliabilityOutput>(model);
+
+            var prediction = engine.Predict(input);
+
+            // Escala simplificada de 0–100 para o Score
+            var score = Math.Clamp(prediction.ScoreConfiabilidade, 0, 100);
+
+            return Results.Ok(new
+            {
+                input.EntregasRealizadas,
+                input.MediaAvaliacoes,
+                input.Infracoes,
+                ScoreConfiabilidade = Math.Round(score, 2)
+            });
+        })
+        .WithSummary("Usa ML.NET para prever o score de confiabilidade de um cliente/entregador com base nas entregas, avaliações e infrações.")
+        .Produces(StatusCodes.Status200OK)
+        .WithName("PreverConfiabilidadeUsuario");
 
         return app;
     }

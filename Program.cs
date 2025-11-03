@@ -49,6 +49,20 @@ builder.Services.AddAuthorization();
 // Health Check
 builder.Services.AddHealthChecks();
 
+//Versionamento
+builder.Services.AddApiVersioning(o =>
+{
+    o.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    o.AssumeDefaultVersionWhenUnspecified = true;
+    o.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(o =>
+{
+    o.GroupNameFormat = "'v'VVV";
+    o.SubstituteApiVersionInUrl = true;
+});
+
 // Swagger + examples
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>

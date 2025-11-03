@@ -67,6 +67,10 @@
               "target": "Package",
               "version": "[8.14.0, )"
             },
+            "Microsoft.ML": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
             "Oracle.EntityFrameworkCore": {
               "target": "Package",
               "version": "[8.21.121, )"
