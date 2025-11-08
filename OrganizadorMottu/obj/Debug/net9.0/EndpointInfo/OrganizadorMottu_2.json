@@ -1,0 +1,63 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "OrgMottu API",
+    "description": "Documentação para a versão 2.0 da API.",
+    "version": "2"
+  },
+  "paths": {
+    "/api/2/Usuario/prever-confiabilidade": {
+      "post": {
+        "tags": [
+          "Usuario"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioReliabilityInput"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioReliabilityInput"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsuarioReliabilityInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UsuarioReliabilityInput": {
+        "type": "object",
+        "properties": {
+          "entregasRealizadas": {
+            "type": "number",
+            "format": "float"
+          },
+          "mediaAvaliacoes": {
+            "type": "number",
+            "format": "float"
+          },
+          "infracoes": {
+            "type": "number",
+            "format": "float"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
