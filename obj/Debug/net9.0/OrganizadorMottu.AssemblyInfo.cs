@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OrganizadorMottu")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ba3acc9d75473ca91bb63547bbb4b2e58243944a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+940720696fe816cee3ac4f93608caef50abc3dc4")]
 [assembly: System.Reflection.AssemblyProductAttribute("OrganizadorMottu")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OrganizadorMottu")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

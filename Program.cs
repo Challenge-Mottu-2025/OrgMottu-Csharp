@@ -1,22 +1,28 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
-using Mottu.Api.Data;
-using Mottu.Api.Dtos;
-using Mottu.Api.Hateoas;
-using Mottu.Api.Endpoints;
-using Mottu.Api.Services;
-using Swashbuckle.AspNetCore.Filters;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Oracle.EntityFrameworkCore;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Swashbuckle.AspNetCore.Filters;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using HealthChecks.UI.Client;
+using Mottu.Api.Application.Dtos;
+using Mottu.Api.Hateoas;
+using Mottu.Api.Services;
+using Mottu.Api.Infrastructure.Repositories;
+using Mottu.Api.Infrastructure.Context;
+using Mottu.Api.Configurations;
+using Mottu.Api.Application.Swagger;
+using Microsoft.AspNetCore.Mvc.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext (Oracle)
+// Banco de Dados (Oracle)
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var cs = builder.Configuration.GetConnectionString("Oracle")
@@ -24,14 +30,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseOracle(cs);
 });
 
-// JWT
+// JWT Authentication
 builder.Services.AddSingleton<JwtTokenService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
-        o.TokenValidationParameters = new()
+        o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
@@ -45,55 +51,61 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
-
-// Health Check
 builder.Services.AddHealthChecks();
 
-//Versionamento
-builder.Services.AddApiVersioning(o =>
+// Versionamento
+builder.Services.AddApiVersioning(options =>
 {
-    o.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
-    o.AssumeDefaultVersionWhenUnspecified = true;
-    o.ReportApiVersions = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
 });
 
-builder.Services.AddVersionedApiExplorer(o =>
+builder.Services.AddVersionedApiExplorer(setup =>
 {
-    o.GroupNameFormat = "'v'VVV";
-    o.SubstituteApiVersionInUrl = true;
+    setup.GroupNameFormat = "VVV"; // Ex: 1.0, 2.0
+    setup.SubstituteApiVersionInUrl = true;
 });
 
-// Swagger + examples
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(o =>
+// Swagger
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+builder.Services.AddSwaggerGen(options =>
 {
-    o.SwaggerDoc(builder.Configuration["Swagger:Version"] ?? "v1", new OpenApiInfo
-    {
-        Title = builder.Configuration["Swagger:Title"] ?? "API",
-        Version = builder.Configuration["Swagger:Version"] ?? "v1",
-        Description = "API RESTful em .NET 8 com boas práticas (paginação, HATEOAS, códigos HTTP)."
-    });
-    o.EnableAnnotations();
+    options.OperationFilter<SwaggerDefaultValues>();
+    options.EnableAnnotations();
+    options.SupportNonNullableReferenceTypes();
 });
 builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 
-// HATEOAS helpers
+// Controllers + HATEOAS + Repositories
+builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<LinkBuilder>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 var app = builder.Build();
 
+var apiVersionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+// Middlewares
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+// Swagger UI
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    foreach (var description in apiVersionProvider.ApiVersionDescriptions)
+    {
+        var group = description.GroupName; // Ex: 1.0
+        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", $"OrgMottu API - {description.GroupName}");
+    }
+    options.RoutePrefix = "swagger";
+});
 
 app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
-// Endpoint groups
-app.MapUsuarioEndpoints();
-app.MapMotoEndpoints();
-app.MapEnderecoEndpoints();
-
-// Endpoint de Health Check
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
@@ -101,4 +113,5 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 app.Run();
 
+// Necessário para testes com WebApplicationFactory
 public partial class Program { }

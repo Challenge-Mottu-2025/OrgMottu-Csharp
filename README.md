@@ -12,6 +12,7 @@ API RESTful em .NET 9 (Minimal API) com boas práticas REST para os modelos de d
 
 Optamos pela arquitetura Minimal API do .NET 9 por sua simplicidade e performance, facilitando o desenvolvimento de APIs RESTful modernas e enxutas. Utilizamos boas práticas REST, como HATEOAS, status codes adequados e paginação. O acesso a dados é feito via Oracle, conforme requisitos do projeto.
 
+Para a Sprint 4, arquitetura foi transformada de Minimal API para a tradicional arquitetura do Asp.Net, para a solução de problemas em relação ao versioning.
 ## Instruções de execução da API
 
 1. Configure a connection string Oracle em `appsettings.json`:
