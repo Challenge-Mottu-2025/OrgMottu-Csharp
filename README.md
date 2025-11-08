@@ -30,75 +30,78 @@ Para a Sprint 4, arquitetura foi transformada de Minimal API para a tradicional 
    [http://localhost:5000/swagger](http://localhost:5000/swagger)  
    *(ou porta exibida no console)*
 
+4. Para realizar os testes:
+    `dotnet test OrganizadorMottuTests`
+
 ## Exemplos de uso dos endpoints
 
 ### Usuários
 
 - Listar usuários (paginado):
   ```http
-  GET /api/usuarios?page=1&pageSize=10
+  GET /api/1.0/usuarios?page=1&pageSize=10
   ```
 - Buscar por CPF:
   ```http
-  GET /api/usuarios/{cpf}
+  GET /api/1.0/usuarios/{cpf}
   ```
 - Criar novo usuário:
   ```http
-  POST /api/usuarios
+  POST /api/1.0/usuarios
   ```
 - Atualizar usuário:
   ```http
-  PUT /api/usuarios/{cpf}
+  PUT /api/1.0/usuarios/{cpf}
   ```
 - Remover usuário:
   ```http
-  DELETE /api/usuarios/{cpf}
+  DELETE /api/1.0/usuarios/{cpf}
   ```
 
 ### Motos
 
 - Listar motos (paginado):
   ```http
-  GET /api/motos?page=1&pageSize=10
+  GET /api/1.0/motos?page=1&pageSize=10
   ```
 - Buscar por placa:
   ```http
-  GET /api/motos/{placa}
+  GET /api/1.0/motos/{placa}
   ```
 - Criar nova moto:
   ```http
-  POST /api/motos
+  POST /api/1.0/motos
   ```
 - Atualizar moto:
   ```http
-  PUT /api/motos/{placa}
+  PUT /api/1.0/motos/{placa}
   ```
 - Remover moto:
   ```http
-  DELETE /api/motos/{placa}
+  DELETE /api/1.0/motos/{placa}
   ```
 
 ### Endereços
 
 - Listar endereços (paginado):
   ```http
-  GET /api/enderecos?page=1&pageSize=10
+  GET /api/1.0/enderecos?page=1&pageSize=10
   ```
 - Buscar por CEP:
   ```http
-  GET /api/enderecos/{nrCep}
+  GET /api/1.0/enderecos/{nrCep}
   ```
 - Criar novo endereço:
   ```http
-  POST /api/enderecos
+  POST /api/1.0/enderecos
   ```
 - Atualizar endereço:
   ```http
-  PUT /api/enderecos/{nrCep}
+  PUT /api/1.0/enderecos/{nrCep}
   ```
 - Remover endereço:
   ```http
-  DELETE /api/enderecos/{nrCep}
+  DELETE /api/1.0/enderecos/{nrCep}
   ```
   
 ---
