@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using OrganizadorMottu;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.HttpsPolicy;
-using OrganizadorMottu.OrganizadorMottu.Infrastructure.Context;
+using OrganizadorMottu.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
@@ -29,18 +29,15 @@ namespace OrganizadorMottuTests.Integration
 
             builder.ConfigureServices(services =>
             {
-                // Remove completamente registros relacionados ao Oracle e DbContexts existentes
                 services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
                 services.RemoveAll(typeof(AppDbContext));
                 services.RemoveAll(typeof(DbContext));
 
-                // Adiciona o banco de dados InMemory
                 services.AddDbContext<AppDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("TestDb");
                 });
 
-                // Garante que HTTPS não interfira nos testes
                 services.PostConfigure<HttpsRedirectionOptions>(o => o.HttpsPort = 443);
             });
         }
