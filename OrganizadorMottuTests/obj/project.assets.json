@@ -2241,6 +2241,7 @@
           "Microsoft.IdentityModel.Tokens": "8.14.0",
           "Microsoft.ML": "4.0.3",
           "Oracle.EntityFrameworkCore": "8.21.121",
+          "Oracle.ManagedDataAccess.Core": "3.21.120",
           "Swashbuckle.AspNetCore": "9.0.6",
           "Swashbuckle.AspNetCore.Annotations": "9.0.4",
           "Swashbuckle.AspNetCore.Filters": "9.0.1",

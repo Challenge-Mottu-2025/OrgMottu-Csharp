@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrganizadorMottu.Infrastructure.Context;
+using Oracle.ManagedDataAccess.Client;
+using System.Data;
 
 namespace OrganizadorMottu.Infrastructure.Repositories
 {
@@ -29,5 +31,38 @@ namespace OrganizadorMottu.Infrastructure.Repositories
         public void Delete(T entity) => _dbSet.Remove(entity);
 
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+
+        // Permite via procedure.
+        public async Task ExecutarProcedureAsync(string procedureName, Dictionary<string, object> parametros)
+        {
+            var connectionString = _context.Database.GetConnectionString();
+            using var conn = new OracleConnection(connectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new OracleCommand(procedureName, conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            foreach (var param in parametros)
+                cmd.Parameters.Add(param.Key, param.Value);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Permite via procedure.
+        public async Task<TResult?> ExecutarFunctionAsync<TResult>(string functionName)
+        {
+            var connectionString = _context.Database.GetConnectionString();
+            using var conn = new OracleConnection(connectionString);
+            await conn.OpenAsync();
+
+            using var cmd = new OracleCommand(functionName, conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.Add("RETURN_VALUE", OracleDbType.Decimal).Direction = ParameterDirection.ReturnValue;
+
+            await cmd.ExecuteNonQueryAsync();
+
+            var result = cmd.Parameters["RETURN_VALUE"].Value;
+            return (TResult?)Convert.ChangeType(result, typeof(TResult));
+        }
     }
 }

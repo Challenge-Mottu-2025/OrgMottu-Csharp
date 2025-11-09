@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OrganizadorMottuTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9e876e58583e9c2a9c865f7e0ae3499ee1a10a5d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f478a384ff3c744e9307c27e02b25ca5a9be9602")]
 [assembly: System.Reflection.AssemblyProductAttribute("OrganizadorMottuTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OrganizadorMottuTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

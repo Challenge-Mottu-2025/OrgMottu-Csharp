@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using OrganizadorMottu.Application.Dtos;
 using OrganizadorMottu.Hateoas;
 using OrganizadorMottu.Infrastructure.Repositories;
@@ -7,8 +8,9 @@ using OrganizadorMottu.Domain.Entity;
 namespace OrganizadorMottu.Controllers;
 
 [ApiController]
+[Route("api/{version:apiVersion}/[controller]")]
 [ApiVersion("1.0")]
-[Route("api/1.0/enderecos")]
+[ApiVersion("2.0")]
 [Produces("application/json")]
 public class EnderecoController : ControllerBase
 {
@@ -21,9 +23,13 @@ public class EnderecoController : ControllerBase
         _links = links;
     }
 
+    // V1 - CRUD COMPLETO NORMAL
+
     [HttpGet]
+    [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PagedResult<EnderecoResponseDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
@@ -34,6 +40,8 @@ public class EnderecoController : ControllerBase
             .Select(e => new EnderecoResponseDto(e.NrCep, e.IdPais, e.SiglaEstado, e.IdCidade, e.IdBairro, e.NrNumero, e.Logradouro, e.Complemento))
             .ToList();
 
+        var version = HttpContext.Features.Get<IApiVersioningFeature>()?.RequestedApiVersion?.ToString() ?? "1.0";
+
         var result = new PagedResult<EnderecoResponseDto>
         {
             Items = items,
@@ -42,42 +50,45 @@ public class EnderecoController : ControllerBase
             TotalItems = total
         };
 
-        result.Links.Add(_links.Self($"/api/enderecos?page={page}&pageSize={pageSize}"));
+        result.Links.Add(_links.Self($"/api/{version}/enderecos?page={page}&pageSize={pageSize}"));
         if ((page - 1) * pageSize > 0)
-            result.Links.Add(_links.Action("prev", $"/api/enderecos?page={page - 1}&pageSize={pageSize}", "GET"));
+            result.Links.Add(_links.Action("prev", $"/api/{version}/enderecos?page={page - 1}&pageSize={pageSize}", "GET"));
         if (page * pageSize < total)
-            result.Links.Add(_links.Action("next", $"/api/enderecos?page={page + 1}&pageSize={pageSize}", "GET"));
+            result.Links.Add(_links.Action("next", $"/api/{version}/enderecos?page={page + 1}&pageSize={pageSize}", "GET"));
 
         return Ok(result);
     }
 
     [HttpGet("{nrCep}")]
-    [ProducesResponseType(typeof(Resource<EnderecoResponseDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [MapToApiVersion("1.0")]
     public async Task<IActionResult> GetByCep(string nrCep)
     {
-        var endereco = (await _repository.GetAllAsync()).FirstOrDefault(e => e.NrCep == nrCep);
+        var endereco = await _repository.GetByIdAsync(nrCep);
         if (endereco is null) return NotFound();
 
-        var dto = new EnderecoResponseDto(endereco.NrCep, endereco.IdPais, endereco.SiglaEstado, endereco.IdCidade, endereco.IdBairro, endereco.NrNumero, endereco.Logradouro, endereco.Complemento);
+        var dto = new EnderecoResponseDto(endereco.NrCep, endereco.IdPais, endereco.SiglaEstado, endereco.IdCidade,
+                                          endereco.IdBairro, endereco.NrNumero, endereco.Logradouro, endereco.Complemento);
+
+        var version = HttpContext.Features.Get<IApiVersioningFeature>()?.RequestedApiVersion?.ToString() ?? "1.0";
+
         var res = new Resource<EnderecoResponseDto>(dto);
-        res.Links.Add(_links.Self($"/api/enderecos/{nrCep}"));
-        res.Links.Add(_links.Action("update", $"/api/enderecos/{nrCep}", "PUT"));
-        res.Links.Add(_links.Action("delete", $"/api/enderecos/{nrCep}", "DELETE"));
+        res.Links.Add(_links.Self($"/api/{version}/enderecos/{nrCep}"));
+        res.Links.Add(_links.Action("update", $"/api/{version}/enderecos/{nrCep}", "PUT"));
+        res.Links.Add(_links.Action("delete", $"/api/{version}/enderecos/{nrCep}", "DELETE"));
 
         return Ok(res);
     }
 
     [HttpPost]
+    [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(Resource<EnderecoResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] EnderecoCreateDto dto)
     {
         var exists = (await _repository.GetAllAsync()).Any(e => e.NrCep == dto.NrCep);
-        if (exists)
-            return Conflict($"Endereço {dto.NrCep} já existe.");
+        if (exists) return Conflict($"Endereço {dto.NrCep} já existe.");
 
-        var model = new Endereco
+        var endereco = new Endereco
         {
             NrCep = dto.NrCep,
             IdPais = dto.IdPais,
@@ -89,22 +100,26 @@ public class EnderecoController : ControllerBase
             Complemento = dto.Complemento
         };
 
-        await _repository.AddAsync(model);
+        await _repository.AddAsync(endereco);
         await _repository.SaveChangesAsync();
 
-        var resDto = new EnderecoResponseDto(model.NrCep, model.IdPais, model.SiglaEstado, model.IdCidade, model.IdBairro, model.NrNumero, model.Logradouro, model.Complemento);
-        var resource = new Resource<EnderecoResponseDto>(resDto);
-        resource.Links.Add(_links.Self($"/api/enderecos/{model.NrCep}"));
+        var resDto = new EnderecoResponseDto(endereco.NrCep, endereco.IdPais, endereco.SiglaEstado,
+                                             endereco.IdCidade, endereco.IdBairro, endereco.NrNumero,
+                                             endereco.Logradouro, endereco.Complemento);
 
-        return Created($"/api/enderecos/{model.NrCep}", resource);
+        var version = HttpContext.Features.Get<IApiVersioningFeature>()?.RequestedApiVersion?.ToString() ?? "1.0";
+
+        var resource = new Resource<EnderecoResponseDto>(resDto);
+        resource.Links.Add(_links.Self($"/api/{version}/enderecos/{endereco.NrCep}"));
+
+        return Created($"/api/{version}/enderecos/{endereco.NrCep}", resource);
     }
 
     [HttpPut("{nrCep}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [MapToApiVersion("1.0")]
     public async Task<IActionResult> Update(string nrCep, [FromBody] EnderecoUpdateDto dto)
     {
-        var endereco = (await _repository.GetAllAsync()).FirstOrDefault(e => e.NrCep == nrCep);
+        var endereco = await _repository.GetByIdAsync(nrCep);
         if (endereco is null) return NotFound();
 
         endereco.IdPais = dto.IdPais;
@@ -122,16 +137,36 @@ public class EnderecoController : ControllerBase
     }
 
     [HttpDelete("{nrCep}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [MapToApiVersion("1.0")]
     public async Task<IActionResult> Delete(string nrCep)
     {
-        var endereco = (await _repository.GetAllAsync()).FirstOrDefault(e => e.NrCep == nrCep);
+        var endereco = await _repository.GetByIdAsync(nrCep);
         if (endereco is null) return NotFound();
 
         _repository.Delete(endereco);
         await _repository.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    // V2 - INSERT VIA PROCEDURE ORACLE
+    [HttpPost("procedure")]
+    [MapToApiVersion("2.0")]
+    public async Task<IActionResult> CreateViaProcedure([FromBody] EnderecoCreateDto dto)
+    {
+        var parametros = new Dictionary<string, object>
+        {
+            { "p_nr_cep", dto.NrCep },
+            { "p_id_pais", dto.IdPais! },
+            { "p_sg_estado", dto.SiglaEstado! },
+            { "p_id_cidade", dto.IdCidade! },
+            { "p_id_bairro", dto.IdBairro! },
+            { "p_nr_numero", dto.NrNumero },
+            { "p_ds_logradouro", dto.Logradouro! },
+            { "p_ds_complemento", dto.Complemento ?? ""}
+        };
+
+        await _repository.ExecutarProcedureAsync("pkg_mottu.pr_inserir_endereco", parametros);
+        return Ok("Endereço inserido via procedure (v2).");
     }
 }
