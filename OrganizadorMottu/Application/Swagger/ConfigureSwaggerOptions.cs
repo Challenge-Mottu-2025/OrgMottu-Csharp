@@ -28,7 +28,7 @@ namespace OrganizadorMottu.Application.Swagger
             {
                 Title = "OrgMottu API",
                 Version = description.GroupName,
-                Description = $"Documenta��o para a vers�o {description.ApiVersion} da API."
+                Description = $"Documentação referente à versão {description.ApiVersion} da API, incluindo especificações técnicas, fluxos de requisição e padrões de resposta adotados."
             };
 
             if (description.IsDeprecated)
