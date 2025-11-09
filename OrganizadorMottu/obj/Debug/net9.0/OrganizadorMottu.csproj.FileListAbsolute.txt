@@ -108,4 +108,3 @@ C:\Users\eadra\Source\Repos\OrgMottu-Csharp\OrganizadorMottu\obj\Debug\net9.0\re
 C:\Users\eadra\Source\Repos\OrgMottu-Csharp\OrganizadorMottu\obj\Debug\net9.0\OrganizadorMottu.pdb
 C:\Users\eadra\Source\Repos\OrgMottu-Csharp\OrganizadorMottu\obj\Debug\net9.0\OrganizadorMottu.genruntimeconfig.cache
 C:\Users\eadra\Source\Repos\OrgMottu-Csharp\OrganizadorMottu\obj\Debug\net9.0\ref\OrganizadorMottu.dll
-C:\Users\eadra\Source\Repos\OrgMottu-Csharp\OrganizadorMottu\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
