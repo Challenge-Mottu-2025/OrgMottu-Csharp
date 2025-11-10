@@ -8,7 +8,7 @@ public class UsuarioConfiguration : IEntityTypeConfiguration<Usuario>
 {
     public void Configure(EntityTypeBuilder<Usuario> builder)
     {
-        builder.ToTable("T_MT_Usuario");
+        builder.ToTable("T_MT_USUARIO");
         builder.HasKey(u => u.Cpf);
 
         builder.Property(u => u.Cpf).HasColumnName("CD_CPF").HasMaxLength(11).IsRequired();

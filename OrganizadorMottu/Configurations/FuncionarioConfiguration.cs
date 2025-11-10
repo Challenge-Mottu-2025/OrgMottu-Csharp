@@ -8,7 +8,7 @@ public class FuncionarioConfiguration : IEntityTypeConfiguration<Funcionario>
 {
     public void Configure(EntityTypeBuilder<Funcionario> builder)
     {
-        builder.ToTable("T_MT_Funcionario");
+        builder.ToTable("T_MT_FUNCIONARIO");
         builder.HasKey(f => f.IdFuncionario);
 
         builder.Property(f => f.IdFuncionario).HasColumnName("ID_FUNCIONARIO").HasPrecision(10);

@@ -8,7 +8,7 @@ public class MotoConfiguration : IEntityTypeConfiguration<Moto>
 {
     public void Configure(EntityTypeBuilder<Moto> builder)
     {
-        builder.ToTable("T_MT_Moto");
+        builder.ToTable("T_MT_MOTO");
         builder.HasKey(m => m.Placa);
 
         builder.Property(m => m.Placa).HasColumnName("CD_PLACA").HasMaxLength(7).IsRequired();

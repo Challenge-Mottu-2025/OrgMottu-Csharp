@@ -8,7 +8,7 @@ public class EnderecoConfiguration : IEntityTypeConfiguration<Endereco>
 {
     public void Configure(EntityTypeBuilder<Endereco> builder)
     {
-        builder.ToTable("T_MT_Endereco");
+        builder.ToTable("T_MT_ENDERECO");
         builder.HasKey(e => e.NrCep);
 
         builder.Property(e => e.NrCep).HasColumnName("NR_CEP").HasPrecision(8).IsRequired();
